@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <!-- Include Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Include Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f0f2f5;
+        }
+
+        .weather-card {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+            position: relative;
+            /* To position the sun icon */
+        }
+
+        .weather-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .input-group-text {
+            background-color: #fff;
+            border: none;
+        }
+
+        .weather-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .weather-info {
+            font-size: 18px;
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        .weather-btn {
+            background-color: #007bff;
+            border: none;
+        }
+
+        .weather-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .sunny-icon {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #ffce00;
+            font-size: 48px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="weather-card">
+        <div class="row justify-content-end">
+            <div class="col-auto">
+                <div class="sunny-icon">
+                    <img src="" alt="" id="weatherIcon" class="mb-4">
+                </div>
+            </div>
+        </div>
+        <h1 class="weather-title text-center mb-4">Weather App</h1>
+        <div class="input-group mb-3">
+            <input type="text" class="form-control" id="cityNameInput" placeholder="Enter Your City Name" aria-label="City Name" aria-describedby="basic-addon2">
+            <button class="btn btn-primary weather-btn" type="button" id="getWeatherButton">Get Weather</button>
+
+        </div>
+        <div id="weatherInfo">
+            <div class="weather-icon text-center">
+                <i class="bi bi-cloud-sun"></i>
+            </div>
+            <div class="weather-info text-center">
+                <p id="location2">Location: </p>
+                <p id="temperature">Temperature: </p>
+                <p id="condition">Weather: </p>
+                <p id="humidity">Humidity: </p>
+                <p id="windSpeed">Wind Speed: </p>
+                <p id="visibility">Visibility: </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        window.onload = function () {
+            checkLocation();
+        };
+
+        document.getElementById('getWeatherButton').addEventListener('click', function () {
+            var cityName = document.getElementById('cityNameInput').value.trim(); // Trim whitespace
+
+            if (cityName === '') {
+                console.error('City name is empty.');
+                return;
+            }
+
+            fetchWeatherByCity(cityName);
+        });
+
+        function checkLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    var latitude = position.coords.latitude;
+                    var longitude = position.coords.longitude;
+                    fetchWeather(latitude, longitude);
+                }, function (error) {
+                    if (error.code === error.PERMISSION_DENIED) {
+                        // Show a popup to request location access
+                        if (confirm("To show local weather, please allow access to your location.")) {
+                            getLocation();
+                        }
+                    } else {
+                        console.error('Error getting location:', error);
+                    }
+                });
+            } else {
+                console.error('Geolocation is not supported by this browser.');
+            }
+        }
+
+        function getLocation() {
+            navigator.geolocation.getCurrentPosition(function (position) {
+                var latitude = position.coords.latitude;
+                var longitude = position.coords.longitude;
+                fetchWeather(latitude, longitude);
+            }, function (error) {
+                console.error('Error getting location:', error);
+            });
+        }
+
+        function fetchWeather(latitude, longitude) {
+            fetch(`/weather?lat=${latitude}&lon=${longitude}`)
+                .then(response => response.json())
+                .then(data => {
+                    updateWeatherInfo(data);
+                })
+                .catch(error => console.error('Error fetching weather data:', error));
+        }
+
+        function fetchWeatherByCity(cityName) {
+            fetch(`/weather?city=${cityName}`)
+                .then(response => response.json())
+                .then(data => {
+                    updateWeatherInfo(data);
+                })
+                .catch(error => console.error('Error fetching weather data:', error));
+        }
+
+        function updateWeatherInfo(data) {
+            document.getElementById('location2').innerText = `Location: ${data.location.country}`;
+            document.getElementById('temperature').innerText = `Temperature: ${data.current.temp_c}°C`;
+            document.getElementById('condition').innerText = `Weather: ${data.current.condition.text}`;
+            document.getElementById('humidity').innerText = `Humidity: ${data.current.humidity}%`;
+            document.getElementById('windSpeed').innerText = `Wind Speed: ${data.current.wind_kph} km/h`;
+            document.getElementById('visibility').innerText = `Visibility: ${data.current.vis_km} km`;
+
+            document.getElementById('weatherIcon').src = `${data.current.condition.icon}`;
+        }
+    </script>
+</body>
+
+</html>
+
